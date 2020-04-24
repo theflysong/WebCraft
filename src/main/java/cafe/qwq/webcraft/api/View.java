@@ -26,18 +26,20 @@ public class View
     private final boolean isTransparent;
     private IResizeCallback resizeCallback;
     private double scale = 1.0f;
-    private final List<Runnable> domReadyCallbakList = new LinkedList<>();
+    private final List<Runnable> domReadyCallbackList = new LinkedList<>();
     private final Map<String, IJSFuncCallback> jsCallbackMap = new HashMap<>();
     private static JsonParser jsonParser = new JsonParser();
+    private WebScreen screen;
 
-    public View()
+    public View(WebScreen screen)
     {
-        this(0, 0, 100, 100);
+        this(0, 0, 100, 100,screen);
     }
 
-    public View(int x, int y, int width, int height)
+    public View(int x, int y, int width, int height, WebScreen screen)
     {
         this(new Vec4i(x, y, width, height), true);
+        this.screen=screen;
     }
 
     public void finalize() throws Throwable
@@ -112,6 +114,7 @@ public class View
     {
         String path = "/assets/" + location.getNamespace() + "/web/" + location.getPath();
         FileUtils.upzipIfNeeded(path);
+        ((WebScreen.WebContainer)screen.getContainer()).addItemSlot("./mods/webcraft" + path);
         String url = "file:///" + "mods/webcraft" + path;
         loadURL(url);
         return this;
@@ -182,13 +185,13 @@ public class View
 
     public void addDOMReadyListener(Runnable runnable)
     {
-        domReadyCallbakList.add(runnable);
+        domReadyCallbackList.add(runnable);
     }
 
     public void onDOMReady()
     {
         jsCallbackMap.keySet().forEach(name -> addJSFuncWithCallback(viewPointer, name));
-        domReadyCallbakList.forEach(Runnable::run);
+        domReadyCallbackList.forEach(Runnable::run);
     }
 
     public void enable()

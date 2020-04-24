@@ -4,26 +4,262 @@ import cafe.qwq.webcraft.api.math.Vec2i;
 import cafe.qwq.webcraft.api.math.Vec4i;
 import cafe.qwq.webcraft.client.KeyboardHelper;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.inventory.ContainerScreen;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.ContainerType;
+import net.minecraft.inventory.container.Slot;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.items.ItemStackHandler;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.LinkedList;
-import java.util.List;
+import javax.annotation.Nullable;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 
-public class WebScreen extends Screen
+public class WebScreen<T extends Container> extends ContainerScreen
 {
     private List<View> viewList;
     private boolean shouldCloseOnEsc;
     private List<IRenderer> rendererList1;
     private List<IRenderer> rendererList2;
     protected double scale;
+    private static int id=50;
 
-    public WebScreen(ITextComponent component)
+    public static class WebContainer extends Container {
+        private Map<String,Slot> slots = new HashMap();
+        private List<SlotInfo> slotInfos = new ArrayList();
+        private static Map<String, Class<? extends Slot>> slotTypes = new HashMap();
+        private int index = 1;
+        private IInventory inv;
+        private ItemStackHandler items;
+
+        public class SlotInfo{
+            public String slotName;
+            public String slotType;
+            public Vec2i Location;
+
+            /**
+             * @param slotName 物品槽名
+             * @param slotType 物品槽类型
+             * @param Location 物品槽位置
+             */
+            public SlotInfo(String slotName,String slotType,Vec2i Location){
+                this.slotName=slotName;
+                this.slotType=slotType;
+                this.Location=Location;
+
+            }
+
+            /**
+             * @param slotName 物品槽名
+             * @param slotType 物品槽类型
+             * @param x 物品槽x轴位置
+             * @param y 物品槽y轴位置
+             */
+            public SlotInfo(String slotName,String slotType,int x,int y){
+                this(slotName,slotType,new Vec2i(x,y));
+            }
+        }
+
+        public static void addSlotsClass(Class<? extends Slot> type,String typeName){
+            slotTypes.put(typeName,type);
+        }
+
+        protected WebContainer(@Nullable ContainerType<?> type, int id,IInventory inv) {
+            super(type, id);
+            this.inv=inv;
+        }
+
+        /**
+         * @param s 物品槽
+         * @param name 物品槽名字
+         * @return 用于链式
+         */
+        public WebContainer addSlot(Slot s,String name){
+            this.slots.put(name,s);
+            return this;
+        }
+
+        /**
+         * @param info 物品槽信息
+         * @return 用于链式
+         */
+        public WebContainer addSlotFromInfo(SlotInfo info){
+            this.slotInfos.add(info);
+            return this;
+        }
+
+        private String getString(int where,String s){
+            String style="";
+            boolean isSlot=false;
+            char ch=' ';
+            for(int j=where;j<s.length();j++){
+                ch=s.charAt(j);
+                if(ch=='"'){
+                    break;
+                }
+                else if(ch==';'||ch==':'){
+                    return style;
+                }
+                style+=ch;
+            }
+            return "String End!";
+        }
+
+        /**
+         * 不用调用，会自己调用
+         * @param path 文件路径
+         * @throws FileNotFoundException 不做表述
+         */
+        public void addItemSlot(String path) throws FileNotFoundException {
+            File f = new File(path);
+            Scanner scan = new Scanner(f);
+            String code = "";
+            while (scan.hasNext()){
+                code += scan.nextLine();
+            }
+            boolean isDiv = false;
+            int where = -1;
+            for(int k=0;k<code.length();k++){
+                for (int i = k; i < code.length(); i++) {
+                    if (isDiv) {
+                        if (code.charAt(i) == 's') {
+                            if (code.charAt(i) == 't') {
+                                if (code.charAt(++i) == 'y') {
+                                    if (code.charAt(++i) == 'l') {
+                                        if (code.charAt(i) == 'y') {
+                                            where = ++i;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (code.charAt(i) == 'd') {
+                            if (code.charAt(++i) == 'i') {
+                                if (code.charAt(++i) == 'v') {
+                                    isDiv = true;
+                                }
+                            }
+                        }
+                    }
+                }
+                char ch='=';
+                if (where != -1) {
+                    for(int j=where;j<code.length();j++){
+                        if(code.charAt(j)==' '||code.charAt(j)==ch){
+                            if(code.charAt(j)==ch){
+                                if(ch=='='){
+                                    ch='"';
+                                }
+                                if(ch=='"'){
+                                    where=j;
+                                    break;
+                                }
+                            }
+                        }
+                        else{
+                            break;
+                        }
+                    }
+                    String style="";
+                    boolean isSlot=false;
+                    int xLocaltion=0,yLocaltion=0;
+                    String SlotType="",SlotName="";
+                    while(true){
+                        style=getString(where,code);
+                        where+=style.length()+1;
+                        if(style=="String End!"){
+                            break;
+                        }
+                        if(isSlot){
+                            switch(style){
+                                case "x":
+                                    xLocaltion = Integer.valueOf(getString(where,code));
+                                    where+=style.length()+1;
+                                    break;
+                                case "y":
+                                    yLocaltion = Integer.valueOf(getString(where,code));
+                                    where+=style.length()+1;
+                                    break;
+                                case "type":
+                                    SlotType = getString(where,code);
+                                    where+=style.length()+1;
+                                    break;
+                                case "name":
+                                    SlotName = getString(where,code);
+                                    where+=style.length()+1;
+                                    break;
+                            }
+                        }
+                        else{
+                            if(style=="divType"){
+                                style=getString(where,code);
+                                where+=style.length()+1;
+                                if(style=="ItemSlot"){
+                                    isSlot=true;
+                                }
+                            }
+                        }
+                    }
+                    this.addSlotFromInfo(new SlotInfo(SlotName,SlotType,xLocaltion,yLocaltion));
+                }
+            }
+
+        }
+
+        /**
+         * 物品栏真正可用
+         * @throws NoSuchMethodException 不做表述
+         * @throws IllegalAccessException 不做表述
+         * @throws InvocationTargetException 不做表述
+         * @throws InstantiationException 不做表述
+         */
+        public void initSlot() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+            items = new ItemStackHandler(slotInfos.size()+slots.values().size());
+            for(SlotInfo slot : slotInfos){
+                if(slot.slotType=="PlayerInventory"){
+                    Slot s = slotTypes.get(slot.slotType).getDeclaredConstructor(
+                            IInventory.class,Integer.class,Integer.class,Integer.class).newInstance(
+                            inv,index++,slot.Location.x,slot.Location.y);
+                    slots.put(slot.slotName,s);
+                }
+                else{
+                    Slot s = slotTypes.get(slot.slotType).getDeclaredConstructor(
+                            IInventory.class,Integer.class,Integer.class,Integer.class).newInstance(
+                            items,index++,slot.Location.x,slot.Location.y);
+                    slots.put(slot.slotName,s);
+                }
+            }
+
+            for(Slot s : slots.values()){
+                this.addSlot(s);
+            }
+        }
+
+        @Override
+        public boolean canInteractWith(PlayerEntity playerIn) {
+            return true;
+        }
+    }
+
+    /**
+     * @return Container
+     */
+    public Container getContainer(){
+        return this.container;
+    }
+
+    public WebScreen(@Nullable ContainerType<?> type, PlayerInventory inv, ITextComponent component)
     {
-        super(component);
+        super(new WebContainer(type,++id,inv),inv,component);
         viewList = new LinkedList<>();
         rendererList1 = new LinkedList<>();
         rendererList2 = new LinkedList<>();
@@ -166,6 +402,11 @@ public class WebScreen extends Screen
         RenderSystem.popMatrix();
     }
 
+    @Override
+    protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
+
+    }
+
     //double lastTime = 0.0;
     //int fpsSum = 0;
 
@@ -198,4 +439,6 @@ public class WebScreen extends Screen
 
         RenderSystem.popMatrix();
     }
+
+
 }
