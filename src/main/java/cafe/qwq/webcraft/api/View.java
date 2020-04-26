@@ -29,23 +29,26 @@ public class View
     private final List<Runnable> domReadyCallbackList = new LinkedList<>();
     private final Map<String, IJSFuncCallback> jsCallbackMap = new HashMap<>();
     private static JsonParser jsonParser = new JsonParser();
-    private WebScreen screen;
+    private String htmlIn;
 
-    public View(WebScreen screen)
+    public View()
     {
-        this(0, 0, 100, 100,screen);
+        this(0, 0, 100, 100);
     }
 
-    public View(int x, int y, int width, int height, WebScreen screen)
+    public View(int x, int y, int width, int height)
     {
         this(new Vec4i(x, y, width, height), true);
-        this.screen=screen;
     }
 
     public void finalize() throws Throwable
     {
         super.finalize();
         destroyView(viewPointer);
+    }
+
+    public String getHtmlIn(){
+        return htmlIn;
     }
 
     /**
@@ -114,7 +117,7 @@ public class View
     {
         String path = "/assets/" + location.getNamespace() + "/web/" + location.getPath();
         FileUtils.upzipIfNeeded(path);
-        ((WebScreen.WebContainer)screen.getContainer()).addItemSlot("./mods/webcraft" + path);
+        this.htmlIn="mods/webcraft" + path;
         String url = "file:///" + "mods/webcraft" + path;
         loadURL(url);
         return this;

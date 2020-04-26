@@ -3,6 +3,7 @@ package cafe.qwq.webcraft.api;
 import cafe.qwq.webcraft.api.math.Vec2i;
 import cafe.qwq.webcraft.api.math.Vec4i;
 import cafe.qwq.webcraft.client.KeyboardHelper;
+import cafe.qwq.webcraft.util.FileUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.entity.player.PlayerEntity;
@@ -19,7 +20,7 @@ import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
@@ -41,9 +42,9 @@ public class WebScreen<T extends Container> extends ContainerScreen
         private ItemStackHandler items;
 
         public class SlotInfo{
-            public String slotName;
-            public String slotType;
-            public Vec2i Location;
+            public final String slotName;
+            public final String slotType;
+            public final Vec2i Location;
 
             /**
              * @param slotName 物品槽名
@@ -54,7 +55,6 @@ public class WebScreen<T extends Container> extends ContainerScreen
                 this.slotName=slotName;
                 this.slotType=slotType;
                 this.Location=Location;
-
             }
 
             /**
@@ -114,11 +114,11 @@ public class WebScreen<T extends Container> extends ContainerScreen
         }
 
         /**
-         * 不用调用，会自己调用
-         * @param path 文件路径
-         * @throws FileNotFoundException 不做表述
+         * 会自己调用
+         * @param path 不做表述
+         * @throws IOException 不做表述
          */
-        public void addItemSlot(String path) throws FileNotFoundException {
+        public void addItemSlot(String path) throws IOException {
             File f = new File(path);
             Scanner scan = new Scanner(f);
             String code = "";
@@ -134,7 +134,7 @@ public class WebScreen<T extends Container> extends ContainerScreen
                             if (code.charAt(i) == 't') {
                                 if (code.charAt(++i) == 'y') {
                                     if (code.charAt(++i) == 'l') {
-                                        if (code.charAt(i) == 'y') {
+                                        if (code.charAt(i) == 'e') {
                                             where = ++i;
                                             break;
                                         }
@@ -183,19 +183,19 @@ public class WebScreen<T extends Container> extends ContainerScreen
                             switch(style){
                                 case "x":
                                     xLocaltion = Integer.valueOf(getString(where,code));
-                                    where+=style.length()+1;
+                                    where+=getString(where,code).length()+1;
                                     break;
                                 case "y":
                                     yLocaltion = Integer.valueOf(getString(where,code));
-                                    where+=style.length()+1;
+                                    where+=getString(where,code).length()+1;
                                     break;
                                 case "type":
                                     SlotType = getString(where,code);
-                                    where+=style.length()+1;
+                                    where+=SlotType.length()+1;
                                     break;
                                 case "name":
                                     SlotName = getString(where,code);
-                                    where+=style.length()+1;
+                                    where+=SlotName.length()+1;
                                     break;
                             }
                         }
@@ -216,7 +216,7 @@ public class WebScreen<T extends Container> extends ContainerScreen
         }
 
         /**
-         * 物品栏真正可用
+         * 使物品栏真正可用的方法
          * @throws NoSuchMethodException 不做表述
          * @throws IllegalAccessException 不做表述
          * @throws InvocationTargetException 不做表述
@@ -250,13 +250,6 @@ public class WebScreen<T extends Container> extends ContainerScreen
         }
     }
 
-    /**
-     * @return Container
-     */
-    public Container getContainer(){
-        return this.container;
-    }
-
     public WebScreen(@Nullable ContainerType<?> type, PlayerInventory inv, ITextComponent component)
     {
         super(new WebContainer(type,++id,inv),inv,component);
@@ -266,12 +259,28 @@ public class WebScreen<T extends Container> extends ContainerScreen
         shouldCloseOnEsc = true;
     }
 
+    public WebScreen(ITextComponent component)
+    {
+        super(null,null,component);
+        viewList = new LinkedList<>();
+        rendererList1 = new LinkedList<>();
+        rendererList2 = new LinkedList<>();
+        shouldCloseOnEsc = true;
+    }
+
     /**
      * 添加一个网页View
      */
-    public WebScreen addView(View view)
-    {
+    public WebScreen addView(View view) {
         viewList.add(view);
+        try{
+            if(this.container!=null){
+                ((WebContainer)container).addItemSlot(view.getHtmlIn());
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
         return this;
     }
 

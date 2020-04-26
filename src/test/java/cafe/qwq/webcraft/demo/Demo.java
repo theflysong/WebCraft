@@ -31,8 +31,8 @@ public class Demo
         if (event.getGui() instanceof MainMenuScreen)
         {
             //event.setGui(new DemoScreen());
-            WebScreen screen = new WebScreen(null,null,new StringTextComponent("test"));
-            View view = new View(screen);
+            WebScreen screen = new WebScreen(new StringTextComponent("test"));
+            View view = new View();
             view.setResizeCallback(vec -> new Vec4i(0, 0, vec.x, vec.y));
             try
             {
@@ -62,7 +62,7 @@ public class Demo
     public static void openGUIQAQ(final PlayerInteractEvent.LeftClickBlock event) {
         if(event.getUseBlock().equals(Blocks.DIAMOND_BLOCK)&&event.getUseItem().equals(Items.STICK)){
             WebScreen screen = new WebScreen(null,null,new StringTextComponent("test"));
-            View view = new View(screen);
+            View view = new View();
             view.setResizeCallback(vec -> new Vec4i(0, 0, vec.x, vec.y));
             screen.addView(view).addPreRenderer((mouseX, mouseY, pTicks) -> screen.renderBackground());
             try {
