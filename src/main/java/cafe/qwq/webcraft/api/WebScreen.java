@@ -244,7 +244,6 @@ public class WebScreen<T extends Container> extends ContainerScreen
             }
         }
 
-        @Override
         public boolean canInteractWith(PlayerEntity playerIn) {
             return true;
         }
@@ -348,6 +347,12 @@ public class WebScreen<T extends Container> extends ContainerScreen
         for (View view : viewList)
             view.fireMouseEvent(2, buttonID, (int) mouseX - view.getBounds().x, (int) mouseY - view.getBounds().y);
         return true;
+    }
+
+    public void tick() {
+        if(this.container!=null) {
+            super.tick();
+        }
     }
 
     public void mouseMoved(double mouseX, double mouseY)
