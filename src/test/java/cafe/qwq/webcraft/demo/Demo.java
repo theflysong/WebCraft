@@ -1,6 +1,7 @@
 package cafe.qwq.webcraft.demo;
 
 import cafe.qwq.webcraft.api.View;
+import cafe.qwq.webcraft.api.WebContainerScreen;
 import cafe.qwq.webcraft.api.WebScreen;
 import cafe.qwq.webcraft.api.math.Vec4i;
 import com.google.gson.JsonParser;
@@ -24,7 +25,7 @@ public class Demo
     public Demo()
     {
         MinecraftForge.EVENT_BUS.addListener(Demo::onGUiOpen);
-        WebScreen.WebContainer.addSlotsClass(Slot.class,"slot");
+        WebContainerScreen.WebContainer.addSlotsClass(Slot.class,"slot");
     }
 
     public static void onGUiOpen(final GuiOpenEvent event)
@@ -62,7 +63,7 @@ public class Demo
 
     public static void openGUIQAQ(final PlayerInteractEvent.LeftClickBlock event) {
         if(event.getUseBlock().equals(Blocks.DIAMOND_BLOCK)&&event.getUseItem().equals(Items.STICK)){
-            WebScreen screen = new WebScreen(null,null,new StringTextComponent("test"));
+            WebContainerScreen screen = new WebContainerScreen(null,event.getPlayer().inventory,new StringTextComponent("test"));
             View view = new View();
             view.setResizeCallback(vec -> new Vec4i(0, 0, vec.x, vec.y));
             screen.addView(view).addPreRenderer((mouseX, mouseY, pTicks) -> screen.renderBackground());
