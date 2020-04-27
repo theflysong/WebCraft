@@ -71,8 +71,8 @@ public class WebContainerScreen<T extends Container> extends ContainerScreen
             slotTypes.put(typeName,type);
         }
 
-        protected WebContainer(@Nullable ContainerType<?> type, int id,IInventory inv) {
-            super(type, id);
+        protected WebContainer(int id,IInventory inv) {
+            super(null,id);
             this.inv=inv;
         }
 
@@ -260,9 +260,9 @@ public class WebContainerScreen<T extends Container> extends ContainerScreen
         }
     }
 
-    public WebContainerScreen(@Nullable ContainerType<?> type, PlayerInventory inv, ITextComponent component)
+    public WebContainerScreen( PlayerInventory inv, ITextComponent component)
     {
-        super(new WebContainer(type,++id,inv),inv,component);
+        super(new WebContainer(++id,inv),inv,component);
         viewList = new LinkedList<>();
         rendererList1 = new LinkedList<>();
         rendererList2 = new LinkedList<>();

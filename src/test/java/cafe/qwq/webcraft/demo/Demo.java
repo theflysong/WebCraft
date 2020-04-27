@@ -63,7 +63,7 @@ public class Demo
 
     public static void openGUIQAQ(final PlayerInteractEvent.LeftClickBlock event) {
         if(event.getUseBlock().equals(Blocks.DIAMOND_BLOCK)&&event.getUseItem().equals(Items.STICK)){
-            WebContainerScreen screen = new WebContainerScreen(null,event.getPlayer().inventory,new StringTextComponent("test"));
+            WebContainerScreen screen = new WebContainerScreen(event.getPlayer().inventory,new StringTextComponent("test"));
             View view = new View();
             view.setResizeCallback(vec -> new Vec4i(0, 0, vec.x, vec.y));
             screen.addView(view).addPreRenderer((mouseX, mouseY, pTicks) -> screen.renderBackground());
