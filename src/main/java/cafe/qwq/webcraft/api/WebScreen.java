@@ -223,7 +223,7 @@ public class WebScreen<T extends Container> extends ContainerScreen
          * @throws InstantiationException 不做表述
          */
         public void initSlot() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-            items = new ItemStackHandler(slotInfos.size()+slots.values().size());
+            items = new ItemStackHandler(slotInfos.size()+slots.values().size()+10);
             for(SlotInfo slot : slotInfos){
                 if(slot.slotType=="PlayerInventory"){
                     Slot s = slotTypes.get(slot.slotType).getDeclaredConstructor(
@@ -241,6 +241,18 @@ public class WebScreen<T extends Container> extends ContainerScreen
 
             for(Slot s : slots.values()){
                 this.addSlot(s);
+            }
+            for (int i = 0; i < 3; ++i)
+            {
+                for (int j = 0; j < 9; ++j)
+                {
+                    this.addSlot(new Slot(inv, j + i * 9 + 9, 8 + j * 18, 74 + i * 18));
+                }
+            }
+
+            for (int i = 0; i < 9; ++i)
+            {
+                this.addSlot(new Slot(inv, i, 8 + i * 18, 132));
             }
         }
 
@@ -389,7 +401,10 @@ public class WebScreen<T extends Container> extends ContainerScreen
         {
             charTyped('\r', 0);
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        if(container!=null){
+            return super.keyPressed(keyCode, scanCode, modifiers);
+        }
+        return true;
     }
 
     public boolean keyReleased(int keyCode, int scanCode, int modifiers)
@@ -397,7 +412,10 @@ public class WebScreen<T extends Container> extends ContainerScreen
         int uKeyCode = KeyboardHelper.glfwKeyCodeToUltralightKeyCode(keyCode);
         int uModifiers = KeyboardHelper.glfwModsToUltralightMods(modifiers);
         viewList.forEach(view -> view.fireKeyEvent(1, uModifiers, null, scanCode, uKeyCode));
-        return super.keyReleased(keyCode, scanCode, modifiers);
+        if(container!=null){
+            return super.keyReleased(keyCode, scanCode, modifiers);
+        }
+        return true;
     }
 
     public void renderBackground(int p_renderBackground_1_)

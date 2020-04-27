@@ -5,6 +5,7 @@ import cafe.qwq.webcraft.api.WebScreen;
 import cafe.qwq.webcraft.api.math.Vec4i;
 import com.google.gson.JsonParser;
 import net.minecraft.block.Blocks;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.MainMenuScreen;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.Items;
@@ -72,6 +73,7 @@ public class Demo
             {
                 e.printStackTrace();
             }
+            Minecraft.getInstance().displayGuiScreen(screen);
             //OpenGUI(我不会打开)
             //然后看看有没有什么地方可以放物品，我不会qaq
         }
